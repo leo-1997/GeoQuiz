@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,7 +14,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button mTrueButton;
     private Button mFalseButton;
-    private Button mNextButton;
+    private ImageButton mPrevButton;
+    private ImageButton mNextButton;
     private TextView mQuestionTextView;
 
     private Question[] mQuestionBank = {new Question(R.string.question_australia, true),
@@ -35,7 +37,16 @@ public class MainActivity extends AppCompatActivity {
 
         mTrueButton = findViewById(R.id.true_button);
         mFalseButton = findViewById(R.id.false_button);
+        mPrevButton = findViewById(R.id.prev_button);
         mNextButton = findViewById(R.id.next_button);
+
+        mQuestionTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mCurrentQuestionIndex = (++mCurrentQuestionIndex) % mQuestionBank.length;
+                updateQuestion();
+            }
+        });
 
         mTrueButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -48,6 +59,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 checkAnswer(false);
+            }
+        });
+
+        mPrevButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mCurrentQuestionIndex == 0) {
+                    Toast.makeText(MainActivity.this, R.string.first_toast, Toast.LENGTH_SHORT).show();
+                } else {
+                    mCurrentQuestionIndex = (--mCurrentQuestionIndex) % mQuestionBank.length;
+                    updateQuestion();
+                }
             }
         });
 

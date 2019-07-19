@@ -3,6 +3,7 @@ package com.example.geoquiz;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -10,9 +11,15 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";
+    private static final String KEY_INDEX = "index";
+    private static final String KEY_ANS = "answer";
+    private static final String KEY_SCORE = "score";
 
     private static Toast mToast;
     private Button mTrueButton;
@@ -21,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mNextButton;
     private TextView mQuestionTextView;
 
+    private int mScore;
+
     private Question[] mQuestionBank = {new Question(R.string.question_australia, true),
             new Question(R.string.question_oceans, true),
             new Question(R.string.question_mideast, false),
@@ -28,13 +37,21 @@ public class MainActivity extends AppCompatActivity {
             new Question(R.string.question_americas, true),
             new Question(R.string.question_asia, true),
 };
+    private ArrayList<Integer> mAnsweredQuestions = new ArrayList<>();
 
     private int mCurrentQuestionIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate (Bundle) called");
         setContentView(R.layout.activity_main);
+
+        if (savedInstanceState != null) {
+            mCurrentQuestionIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mScore = savedInstanceState.getInt(KEY_SCORE);
+            mAnsweredQuestions = savedInstanceState.getIntegerArrayList(KEY_ANS);
+        }
 
         mQuestionTextView = findViewById(R.id.question_text_view);
 
@@ -94,16 +111,68 @@ public class MainActivity extends AppCompatActivity {
         updateQuestion();
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        Log.i(TAG, "onSaveInstanceState");
+        savedInstanceState.putInt(KEY_INDEX, mCurrentQuestionIndex);
+        savedInstanceState.putIntegerArrayList(KEY_ANS, mAnsweredQuestions);
+        savedInstanceState.putInt(KEY_SCORE, mScore);
+    }
+
+    @Override
+    public void onStart () {
+        super.onStart();
+        Log.d(TAG, "onStart() called");
+    }
+
+    @Override
+    public void onResume () {
+        super.onResume();
+        Log.d(TAG, "onResume() called");
+    }
+
+    @Override
+    public void onPause () {
+        super.onPause();
+        Log.d(TAG, "onPause() called");
+    }
+
+        @Override
+        public void onStop () {
+            super.onStop();
+            Log.d(TAG, "onStop() called");
+    }
+
+    @Override
+    public void onDestroy () {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy() called");
+    }
+
     private void updateQuestion() {
         mQuestionTextView.setText(mQuestionBank[mCurrentQuestionIndex].getTextResId());
+        //if upcoming answer page is answered, hide the page
+        if (mAnsweredQuestions.contains(mCurrentQuestionIndex)) {
+            hideButton();
+        } else {
+            showButton();
+        }
     }
 
     private void checkAnswer(boolean userAnswer) {
         boolean answerIsTrue = mQuestionBank[mCurrentQuestionIndex].isAnswerTrue();
 
+        mAnsweredQuestions.add(mCurrentQuestionIndex);
         int messageResId;
 
-        messageResId = (userAnswer == answerIsTrue ? R.string.correct_toast : R.string.wrong_toast);
+        if (userAnswer == answerIsTrue) {
+            messageResId = R.string.correct_toast;
+            mScore++;
+        } else {
+            messageResId = R.string.wrong_toast;
+        }
+//        messageResId = (userAnswer == answerIsTrue ? R.string.correct_toast : R.string.wrong_toast);
 
         if (mToast == null) {
             mToast = Toast.makeText(MainActivity.this, messageResId, Toast.LENGTH_SHORT);
@@ -112,5 +181,39 @@ public class MainActivity extends AppCompatActivity {
         }
         mToast.setGravity(Gravity.TOP, 0, 0);
         mToast.show();
+
+        if (mAnsweredQuestions.size() == mQuestionBank.length) {
+            calculateScore();
+            updateQuestion();
+        } else {
+            //refresh current page and hide the button
+            updateQuestion();
+        }
+    }
+
+    private void calculateScore() {
+        DecimalFormat df = new DecimalFormat("0.00%");
+        String finalScore = df.format((double)mScore/mQuestionBank.length);
+        CharSequence res = "You have correctly answered " + finalScore + "of questions!";
+        System.out.println(res);
+        System.out.println(finalScore);
+        System.out.println(mScore);
+        if (mToast == null) {
+            mToast = Toast.makeText(MainActivity.this, res, Toast.LENGTH_SHORT);
+        } else {
+            mToast.setText(res);
+        }
+        mToast.setGravity(Gravity.BOTTOM, 0, 0);
+        mToast.show();
+    }
+
+    private void showButton() {
+        mTrueButton.setVisibility(View.VISIBLE);
+        mFalseButton.setVisibility(View.VISIBLE);
+    }
+
+    private void hideButton() {
+        mTrueButton.setVisibility(View.INVISIBLE);
+        mFalseButton.setVisibility(View.INVISIBLE);
     }
 }

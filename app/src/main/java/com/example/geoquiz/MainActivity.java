@@ -1,7 +1,11 @@
 package com.example.geoquiz;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,7 +23,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final String KEY_ANS = "answer";
+    private static final String KEY_CHEAT = "cheat";
     private static final String KEY_SCORE = "score";
+    private static final String EXTRA_ANSWER_IS_TRUE = "com.example.geoquiz.answer_is_true";
+    private static final int REQUEST_CODE_CHEAT = 0;
 
     private static Toast mToast;
     private Button mTrueButton;
@@ -27,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mPrevButton;
     private ImageButton mNextButton;
     private TextView mQuestionTextView;
+    private Button mCheatButton;
 
     private int mScore;
 
@@ -37,9 +45,17 @@ public class MainActivity extends AppCompatActivity {
             new Question(R.string.question_americas, true),
             new Question(R.string.question_asia, true),
 };
+
+    private ArrayList<Integer> mCheatedQuestions = new ArrayList<>();
     private ArrayList<Integer> mAnsweredQuestions = new ArrayList<>();
 
     private int mCurrentQuestionIndex = 0;
+
+    public static Intent newIntent(Context packageContext, boolean answerIsTrue) {
+        Intent intent = new Intent(packageContext, CheatActivity.class);
+        intent.putExtra(EXTRA_ANSWER_IS_TRUE, answerIsTrue);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +67,12 @@ public class MainActivity extends AppCompatActivity {
             mCurrentQuestionIndex = savedInstanceState.getInt(KEY_INDEX, 0);
             mScore = savedInstanceState.getInt(KEY_SCORE);
             mAnsweredQuestions = savedInstanceState.getIntegerArrayList(KEY_ANS);
+            mCheatedQuestions = savedInstanceState.getIntegerArrayList(KEY_CHEAT);
         }
 
         mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
 
+        mCheatButton = findViewById(R.id.cheat_button);
         mTrueButton = findViewById(R.id.true_button);
         mFalseButton = findViewById(R.id.false_button);
         mPrevButton = findViewById(R.id.prev_button);
@@ -65,6 +83,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mCurrentQuestionIndex = (++mCurrentQuestionIndex) % mQuestionBank.length;
                 updateQuestion();
+            }
+        });
+
+        mCheatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(MainActivity.newIntent(MainActivity.this,
+                        mQuestionBank[mCurrentQuestionIndex].isAnswerTrue()), REQUEST_CODE_CHEAT);
             }
         });
 
@@ -112,12 +138,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_CHEAT && resultCode == Activity.RESULT_OK) {
+            if (data != null) {
+                if (CheatActivity.wasAnswerShown(data)) {
+                    mCheatedQuestions.add(mCurrentQuestionIndex);
+                }
+            }
+        }
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         Log.i(TAG, "onSaveInstanceState");
         savedInstanceState.putInt(KEY_INDEX, mCurrentQuestionIndex);
         savedInstanceState.putIntegerArrayList(KEY_ANS, mAnsweredQuestions);
         savedInstanceState.putInt(KEY_SCORE, mScore);
+        savedInstanceState.putIntegerArrayList(KEY_CHEAT, mCheatedQuestions);
     }
 
     @Override
@@ -166,11 +205,15 @@ public class MainActivity extends AppCompatActivity {
         mAnsweredQuestions.add(mCurrentQuestionIndex);
         int messageResId;
 
-        if (userAnswer == answerIsTrue) {
-            messageResId = R.string.correct_toast;
-            mScore++;
+        if (mCheatedQuestions.contains(mCurrentQuestionIndex)) {
+            messageResId = R.string.judgment_toast;
         } else {
-            messageResId = R.string.wrong_toast;
+            if (userAnswer == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+                mScore++;
+            } else {
+                messageResId = R.string.wrong_toast;
+            }
         }
 //        messageResId = (userAnswer == answerIsTrue ? R.string.correct_toast : R.string.wrong_toast);
 

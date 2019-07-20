@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             mAnsweredQuestions = savedInstanceState.getIntegerArrayList(KEY_ANS);
         }
 
-        mQuestionTextView = findViewById(R.id.question_text_view);
+        mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
 
         mTrueButton = findViewById(R.id.true_button);
         mFalseButton = findViewById(R.id.false_button);

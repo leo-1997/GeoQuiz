@@ -112,11 +112,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (mCurrentQuestionIndex == 0) {
-                    if (mToast == null) {
+//                    if (mToast == null) {
                         mToast = Toast.makeText(MainActivity.this, R.string.first_toast, Toast.LENGTH_SHORT);
-                    } else {
-                        mToast.setText(R.string.first_toast);
-                    }
+//                        mToast.show();
+//                    } else {
+//                        mToast.setText(R.string.first_toast);
+//                    }
                     mToast.setGravity(Gravity.TOP, 0, 0);
                     mToast.show();
                 } else {
@@ -217,11 +218,12 @@ public class MainActivity extends AppCompatActivity {
         }
 //        messageResId = (userAnswer == answerIsTrue ? R.string.correct_toast : R.string.wrong_toast);
 
-        if (mToast == null) {
+//        if (mToast == null) {
             mToast = Toast.makeText(MainActivity.this, messageResId, Toast.LENGTH_SHORT);
-        } else {
-            mToast.setText(messageResId);
-        }
+//            mToast.show();
+//        } else {
+//            mToast.setText(messageResId);
+//        }
         mToast.setGravity(Gravity.TOP, 0, 0);
         mToast.show();
 
@@ -241,11 +243,12 @@ public class MainActivity extends AppCompatActivity {
         System.out.println(res);
         System.out.println(finalScore);
         System.out.println(mScore);
-        if (mToast == null) {
+//        if (mToast == null) {
             mToast = Toast.makeText(MainActivity.this, res, Toast.LENGTH_SHORT);
-        } else {
-            mToast.setText(res);
-        }
+//            mToast.show();
+//        } else {
+//            mToast.setText(res);
+//        }
         mToast.setGravity(Gravity.BOTTOM, 0, 0);
         mToast.show();
     }

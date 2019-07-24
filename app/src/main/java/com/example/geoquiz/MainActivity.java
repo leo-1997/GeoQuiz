@@ -20,14 +20,19 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int MAXIMUM_CHEAT = 3;
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final String KEY_ANS = "answer";
     private static final String KEY_CHEAT = "cheat";
+    private static final String KEY_CHEAT_NUMBER = "cheat_number";
     private static final String KEY_SCORE = "score";
     private static final String EXTRA_ANSWER_IS_TRUE = "com.example.geoquiz.answer_is_true";
     private static final int REQUEST_CODE_CHEAT = 0;
 
+    private int mCheatNumber = 0;
+
+    private TextView mCheatNum;
     private static Toast mToast;
     private Button mTrueButton;
     private Button mFalseButton;
@@ -68,10 +73,11 @@ public class MainActivity extends AppCompatActivity {
             mScore = savedInstanceState.getInt(KEY_SCORE);
             mAnsweredQuestions = savedInstanceState.getIntegerArrayList(KEY_ANS);
             mCheatedQuestions = savedInstanceState.getIntegerArrayList(KEY_CHEAT);
+            mCheatNumber = savedInstanceState.getInt(KEY_CHEAT_NUMBER);
         }
 
         mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
-
+        mCheatNum = findViewById(R.id.cheat_number);
         mCheatButton = findViewById(R.id.cheat_button);
         mTrueButton = findViewById(R.id.true_button);
         mFalseButton = findViewById(R.id.false_button);
@@ -145,7 +151,9 @@ public class MainActivity extends AppCompatActivity {
             if (data != null) {
                 if (CheatActivity.wasAnswerShown(data)) {
                     mCheatedQuestions.add(mCurrentQuestionIndex);
+                    mCheatNumber++;
                 }
+                updateCheatNumber();
             }
         }
     }
@@ -158,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
         savedInstanceState.putIntegerArrayList(KEY_ANS, mAnsweredQuestions);
         savedInstanceState.putInt(KEY_SCORE, mScore);
         savedInstanceState.putIntegerArrayList(KEY_CHEAT, mCheatedQuestions);
+        savedInstanceState.putInt(KEY_CHEAT_NUMBER, mCheatNumber);
     }
 
     @Override
@@ -192,12 +201,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateQuestion() {
         mQuestionTextView.setText(mQuestionBank[mCurrentQuestionIndex].getTextResId());
+        updateCheatNumber();
         //if upcoming answer page is answered, hide the page
         if (mAnsweredQuestions.contains(mCurrentQuestionIndex)) {
             hideButton();
         } else {
             showButton();
         }
+//        updateCheatNumber();
     }
 
     private void checkAnswer(boolean userAnswer) {
@@ -227,6 +238,8 @@ public class MainActivity extends AppCompatActivity {
         mToast.setGravity(Gravity.TOP, 0, 0);
         mToast.show();
 
+//        updateCheatNumber();
+
         if (mAnsweredQuestions.size() == mQuestionBank.length) {
             calculateScore();
             updateQuestion();
@@ -251,6 +264,14 @@ public class MainActivity extends AppCompatActivity {
 //        }
         mToast.setGravity(Gravity.BOTTOM, 0, 0);
         mToast.show();
+    }
+
+    private void updateCheatNumber() {
+        mCheatNum.setText("You have " + (MAXIMUM_CHEAT - mCheatNumber) +" cheat chance left");
+
+        if (mCheatNumber == MAXIMUM_CHEAT) {
+            mCheatButton.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void showButton() {
